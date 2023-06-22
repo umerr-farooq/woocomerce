@@ -8,7 +8,7 @@ function woo_remove_product_tabs( $tabs ) {
     unset( $tabs['additional_information'] );  	// Remove the additional information tab
     return $tabs;
 }
-
+//
 
 remove_action( 'woocommerce_single_product_summary', 'woocommerce_template_single_excerpt', 20 );
 
@@ -24,5 +24,13 @@ function woocommerce_product_description() {
     }
 }
 add_action( 'woocommerce_after_add_to_cart_button', 'woocommerce_product_description', 10 );
+//
+
+// To change add to cart text on product archives(Collection) pages globaly
+add_filter( 'woocommerce_product_add_to_cart_text', 'woocommerce_custom_product_add_to_cart_text' );  
+function woocommerce_custom_product_add_to_cart_text() {
+	return __( 'Shop Now', 'woocommerce' );
+}
+//
 
 ?>
