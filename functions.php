@@ -45,7 +45,7 @@ function filter_woocommerce_cart_shipping_packages( $package ) {
       // check for desired shipping method
       // cart items not checking for this property, will not be accounted for shipping costs
    
-         if( isset($cart_item['variation']['attribute_pa_select-delivery-option'])  && $cart_item['variation']['attribute_pa_select-delivery-option'] == "delivery"){
+         if( isset($cart_item['variation']['attribute_pa_select-delivery-option']) && $cart_item['variation']['attribute_pa_select-delivery-option'] == "delivery"){
             //  print_r( $cart_item['variation']['attribute_pa_select-delivery-option'] ); 
          array_push($new_cart, $cart_item); 
       } 
