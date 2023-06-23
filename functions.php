@@ -33,4 +33,30 @@ function woocommerce_custom_product_add_to_cart_text() {
 }
 //
 
+//disable shipping rates methods based on variations (local-pickup == 0)
+
+// define the woocommerce_cart_shipping_packages callback 
+function filter_woocommerce_cart_shipping_packages( $package ) { 
+    
+    $new_cart = [];
+    global $woocommerce;
+    foreach($woocommerce->cart->get_cart() as $cart_item) {
+       
+      // check for desired shipping method
+      // cart items not checking for this property, will not be accounted for shipping costs
+   
+         if( isset($cart_item['variation']['attribute_pa_select-delivery-option'])  && $cart_item['variation']['attribute_pa_select-delivery-option'] == "delivery"){
+            //  print_r( $cart_item['variation']['attribute_pa_select-delivery-option'] ); 
+         array_push($new_cart, $cart_item); 
+      } 
+    }
+
+    if(!empty($new_cart)) $package[0]['contents'] = $new_cart;
+    return $package; 
+}; 
+         
+// add the filter 
+add_filter( 'woocommerce_cart_shipping_packages', 'filter_woocommerce_cart_shipping_packages', 10, 1 ); 
+//
+
 ?>
