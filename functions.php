@@ -205,4 +205,18 @@ if(is_account_page() ) { ?>
 <?php }
 //
 
+#Rename “Place Order” Button Dynamically Based on Selected Payment Gateway @ WooCommerce Checkout
+add_filter( 'woocommerce_available_payment_gateways', 'bbloomer_rename_place_order_button' );
+ 
+function bbloomer_rename_place_order_button( $gateways ) {
+    if ( $gateways['bacs'] ) {
+        $gateways['bacs']->order_button_text = 'View Bank Details';
+    } elseif ( $gateways['cod'] ) {
+        $gateways['cod']->order_button_text = 'Confirm Cash on Delivery';
+    } 
+    return $gateways;
+}
+//
+
+
 ?>
