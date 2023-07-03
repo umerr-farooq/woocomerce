@@ -205,7 +205,7 @@ if(is_account_page() ) { ?>
 <?php }
 //
 
-#Rename “Place Order” Button Dynamically Based on Selected Payment Gateway @ WooCommerce Checkout
+/*** Rename “Place Order” Button Dynamically Based on Selected Payment Gateway @ WooCommerce Checkout ***/
 add_filter( 'woocommerce_available_payment_gateways', 'bbloomer_rename_place_order_button' );
  
 function bbloomer_rename_place_order_button( $gateways ) {
@@ -217,6 +217,70 @@ function bbloomer_rename_place_order_button( $gateways ) {
     return $gateways;
 }
 //
+
+/*** Disable Autocomplete For Billing Phone @ WooCommerce Checkout ***/
+add_filter( 'woocommerce_checkout_fields', 'bbloomer_disable_autocomplete_checkout_fields' );
+
+function bbloomer_disable_autocomplete_checkout_fields( $fields ) {
+    $fields['billing']['billing_phone']['autocomplete'] = false;
+    return $fields;
+}
+//
+
+/*** Redirect WooCommerce Product Category Page to Single Product Page ***/
+add_action( 'wp', 'bbloomer_redirect_cat_to_product' );
+  
+function bbloomer_redirect_cat_to_product() {
+   if ( is_product_category( 'tables' ) ) {
+      wp_safe_redirect( get_permalink( 123 ) ); // PRODUCT ID
+      exit;
+   }
+}
+//
+
+/*** Disable Payment Gateway For Specific Shipping Method – WooCommerce ***/
+#In this example, I will disable “COD” payment gateway for all “local pickup” shipping rates in whatever shipping zone. You can also target a specific shipping rate (in a single zone).
+add_filter( 'woocommerce_available_payment_gateways', 'bbloomer_gateway_disable_for_shipping_rate' );
+  
+function bbloomer_gateway_disable_for_shipping_rate( $available_gateways ) {
+   if ( ! is_admin() && WC()->session ) {
+      $chosen_methods = WC()->session->get( 'chosen_shipping_methods' );
+      $chosen_shipping = $chosen_methods[0];
+      if ( isset( $available_gateways['cod'] ) && 0 === strpos( $chosen_shipping, 'local_pickup' ) ) {
+         unset( $available_gateways['cod'] );
+      }
+   }
+   return $available_gateways;
+}
+//
+
+/*** Set Default Billing Country or State @ WooCommerce Checkout Page ***/
+// Example 1: default state to OREGON
+ 
+add_filter( 'default_checkout_billing_state', 'bbloomer_change_default_checkout_state' );
+  
+function bbloomer_change_default_checkout_state() {
+  return 'OR'; // state code
+}
+ 
+// Example 2: default country to United States
+ 
+add_filter( 'default_checkout_billing_country', 'bbloomer_change_default_checkout_country' );
+ 
+function bbloomer_change_default_checkout_country() {
+  return 'US'; 
+}
+//
+
+/*** Add Sale Price End Date to Sale Badge @ WooCommerce Shop, Archive, Product Pages ***/
+add_filter( 'woocommerce_sale_flash', 'bbloomer_sale_end_date', 9999, 3 );
+ 
+function bbloomer_sale_end_date( $html, $post, $product ) {
+   if ( $product->get_date_on_sale_to() ) return $html . ' (ends ' . gmdate( 'd M', $product->get_date_on_sale_to()->getTimestamp() ) . ')'; 
+   return $html;
+}
+//
+
 
 
 ?>
