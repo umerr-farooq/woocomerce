@@ -581,8 +581,45 @@ function bbloomer_acf_loop() {
 }
 //
 
+/*** Disable ajax add-to-cart on product loop and redirect to single product page ***/
+#This code removes the default "Add to Cart" button from the product archive and category pages by removing the woocommerce_template_loop_add_to_cart action. Then, it adds a new action custom_redirect_to_single_product that generates a custom button linking to the single product page using the product URL obtained from get_permalink().
+#The disable_add_to_cart_redirect_single_product function is hooked to the wp action, which ensures that the functions are executed when the WordPress environment is fully loaded.
+#You can add this code to your theme's functions.php file or create a custom plugin file in your WordPress installation to implement this functionality.
+function disable_add_to_cart_redirect_single_product() {
+        remove_action( 'woocommerce_after_shop_loop_item', 'woocommerce_template_loop_add_to_cart', 10 );
+        add_action( 'woocommerce_after_shop_loop_item', 'custom_redirect_to_single_product', 10 );
+}
+
+function custom_redirect_to_single_product() {
+    global $product;
+    $product_url = get_permalink( $product->get_id() );
+    ?>
+    <a href="<?php echo esc_url( $product_url ); ?>" class="button"><?php _e( 'View Product', 'text-domain' ); ?></a>
+    <?php
+}
+
+add_action( 'wp', 'disable_add_to_cart_redirect_single_product' );
 
 
+// OR if Specific page//
+
+function disable_add_to_cart_redirect_single_product() {
+    if ( is_archive() || is_product_category() ) {
+        remove_action( 'woocommerce_after_shop_loop_item', 'woocommerce_template_loop_add_to_cart', 10 );
+        add_action( 'woocommerce_after_shop_loop_item', 'custom_redirect_to_single_product', 10 );
+    }
+}
+
+function custom_redirect_to_single_product() {
+    global $product;
+    $product_url = get_permalink( $product->get_id() );
+    ?>
+    <a href="<?php echo esc_url( $product_url ); ?>" class="button"><?php _e( 'View Product', 'text-domain' ); ?></a>
+    <?php
+}
+
+add_action( 'wp', 'disable_add_to_cart_redirect_single_product' );
+//
 
 
 
