@@ -218,15 +218,6 @@ function bbloomer_rename_place_order_button( $gateways ) {
 }
 //
 
-/*** Disable Autocomplete For Billing Phone @ WooCommerce Checkout ***/
-add_filter( 'woocommerce_checkout_fields', 'bbloomer_disable_autocomplete_checkout_fields' );
-
-function bbloomer_disable_autocomplete_checkout_fields( $fields ) {
-    $fields['billing']['billing_phone']['autocomplete'] = false;
-    return $fields;
-}
-//
-
 /*** Redirect WooCommerce Product Category Page to Single Product Page ***/
 add_action( 'wp', 'bbloomer_redirect_cat_to_product' );
   
