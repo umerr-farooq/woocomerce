@@ -621,6 +621,129 @@ function custom_redirect_to_single_product() {
 add_action( 'wp', 'disable_add_to_cart_redirect_single_product' );
 //
 
+/*** Add to Cart Pre-defined Quantity Selectors ***/
+#I seriously spent more than usual trying to write a decent title. Still, I’m not 100% sure I’ve explained it well – so here’s some more context.
+#The WooCommerce Single Product Page add to cart form features a quantity input and an add to cart button. Super simple. Customers can define a quantity and add the current product to the cart.
+#Now, let’s imagine you want to change this experience based on your business requirements, and instead of the quantity input and add to cart button you want to show 3 buttons: “Add 1 to the cart“, “Add 2 to the cart“, “Add 3 to the cart“.
+#And if you can match this with a bulk quantity discount functionality, you can even change the messaging to e.g. “Add 1 to the cart“, “Add 2 to the cart and save $X“, “Add 3 to the cart and save $Y“…
+#So, let’s see how to hide the default add to cart form, and instead show buttons that allow the customer to add to cart a pre-defined product quantity (for simple products). As per this screenshot:
+add_action( 'woocommerce_before_single_product', 'bbloomer_123_quantity_selectors', 1 );
+ 
+function bbloomer_123_quantity_selectors() {
+   global $product;
+   add_action( 'woocommerce_single_product_summary', 'bbloomer_quantity_selectors', 17 );
+   add_action( 'woocommerce_single_product_summary', 'bbloomer_quantity_selectors_css', 18 );
+   remove_action( 'woocommerce_single_product_summary', 'woocommerce_template_single_add_to_cart', 30 );
+}
+ 
+function bbloomer_quantity_selectors() {
+   global $product;
+   ?>
+   <div class="quantities-wrapper">
+        <div class="quantity-wrapper">
+            <a class="single_add_to_cart_button button alt qtyselector" href="/?add-to-cart=<?php echo $product->get_id(); ?>&quantity=1">Add 1 <?php echo $product->get_name(); ?> to the cart</a>
+        </div>
+        <div class="quantity-wrapper">
+            <a class="single_add_to_cart_button button alt qtyselector" href="/?add-to-cart=<?php echo $product->get_id(); ?>&quantity=2">Add 2 <?php echo $product->get_name(); ?> to the cart</a>
+        </div>
+        <div class="quantity-wrapper">
+            <a class="single_add_to_cart_button button alt qtyselector" href="/?add-to-cart=<?php echo $product->get_id(); ?>&quantity=3">Add 3 <?php echo $product->get_name(); ?> to the cart</a>
+        </div>
+    </div>
+   <?php
+}
+ 
+function bbloomer_quantity_selectors_css() {
+   ?>
+   <style>
+       a.single_add_to_cart_button.qtyselector { display: block; border-radius: 8px; text-transform: uppercase; margin-bottom: 1em; text-align: center; }
+   </style>
+   <?php
+}
+//
+
+/*** WooCommerce: Email Admin Upon Fatal Error ***/
+#WooCommerce has a nice feature when it comes to WordPress Error 500 / Fatal Error – it logs the error and all the information regarding it inside the WooCommerce Status > Logs > Fatal Errors area.
+#My problem is that sometimes these errors occur in the backend, so they may not trigger the WordPress built-in email that notifies the admin about the problem.
+#What I want to try (please test it on your development website first, and not on your live website), is a way to get an email each time WooCommerce logs an error, so that I can go in and fix it immediately. Enjoy!
+#Email Admin Each Time a WordPress Fatal Error Occurs
+add_action( 'woocommerce_shutdown_error', 'bbloomer_email_fatal_errors' );
+ 
+function bbloomer_email_fatal_errors( $error ) {
+   $email_subject = "Critical Error On Your WooCommerce Site";
+   $email_content = sprintf( __( '%1$s in %2$s on line %3$s', 'woocommerce' ), $error['message'], $error['file'], $error['line'] );
+   wp_mail( get_option( 'admin_email' ), $email_subject, $email_content );
+}
+//
+
+/*** Disable Checkout Field Autocomplete ***/
+#By default, WooCommerce adds the “autocomplete” attribute to almost all checkout fields. For example, “billing_phone” has “autocomplete=tel”, “billing_country” has “autocomplete=country” and so on.
+#When logged out or if the logged in user has never done a purchase before, the WooCommerce Checkout page fields are possibly autofilled by the browser based on saved data / addresses.
+#Disable Autocomplete For Billing Phone @ WooCommerce Checkout
+add_filter( 'woocommerce_checkout_fields', 'bbloomer_disable_autocomplete_checkout_fields' );
+   
+function bbloomer_disable_autocomplete_checkout_fields( $fields ) {
+    $fields['billing']['billing_phone']['autocomplete'] = false;
+    return $fields;
+}
+
+#You can target any of these checkout fields:
+
+#Billing
+// billing_last_name
+// billing_company
+// billing_address_1
+// billing_address_2
+// billing_city
+// billing_postcode
+// billing_country
+// billing_state
+// billing_email
+// billing_phone
+
+#Shipping
+// shipping_first_name
+// shipping_last_name
+// shipping_company
+// shipping_address_1
+// shipping_address_2
+// shipping_city
+// shipping_postcode
+// shipping_country
+// shipping_state
+
+#Account
+// account_username
+// account_password
+// account_password-2
+
+#Order
+// order_comments
+
+//
+
+/*** Add Product To Order After Purchase ***/
+#On Business Bloomer I sell a bundle of products, and I use no Bundles plugin for that. So the challenge was to programmatically add a list of products to the order upon purchase, once the bundle product is purchased.
+#This is an amazing way to save time for the customer, as they don’t need to manually add each product to the cart. In the background, after a successful purchase, some magic code (that you find below) adds products to the order, sets their price to $0.00 (so that the order total is not altered), and saves the order. Enjoy!
+#Programmatically Add Product To a Paid WooCommerce Order
+#Please note – the code below searches through the order items to see if product ID = “123” is present. This is the “bundle” product.
+#When that is purchased, my code triggers and adds to cart product ID = “456”. You can of course add multiple products by adding as many $order->add_product lines as you wish.
+add_action( 'woocommerce_payment_complete', 'bbloomer_add_products_to_order', 9999 );
+ 
+function bbloomer_add_products_to_order( $order_id ) {
+   $order = wc_get_order( $order_id );
+   foreach ( $order->get_items() as $item_id => $item ) {
+      $product_id = $item->get_product_id();
+      if ( $product_id && $product_id == 123 ) {
+         $order->add_product( wc_get_product( 456 ), 1, array( 'subtotal' => 0, 'total' => 0 ) );   
+         $order->save();         
+         //wc_downloadable_product_permissions( $order_id, true ); ADD THIS IF ADDED PRODUCT IS DOWNLOADABLE
+         //wc_update_product_stock( wc_get_product( 456 ), 1, 'decrease' ); ADD THIS IF YOU WANT TO REDUCE PRODUCT STOCK BY 1
+         break;
+      }
+   }
+}
+//
 
 
 
