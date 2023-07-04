@@ -746,16 +746,6 @@ function bbloomer_show_free_shipping_loop() {
 }
 //
 
-/*** Remove Additional Information Tab @ Single Product ***/
-#Hide Additional Information Tab @ WooCommerce Single Product Page
-add_filter( 'woocommerce_product_tabs', 'bbloomer_remove_product_tabs', 9999 );
-  
-function bbloomer_remove_product_tabs( $tabs ) {
-    unset( $tabs['additional_information'] ); 
-    return $tabs;
-}
-//
-
 /*** Show Number Of Products Sold @ Product Page ***/
 #WooCommerce database already stores the number of products sold for you.
 #Therefore, you may want to show such number on the product page, close to the Add To Cart button. As we’ve seen in my book Ecommerce and Beyond, showing the number of sales for each product can increase your sales conversion rate.
