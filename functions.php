@@ -745,6 +745,40 @@ function bbloomer_add_products_to_order( $order_id ) {
 }
 //
 
+/*** Add Text Under Each Product @ Shop Page ***/
+#A client asked me to add a “Free Shipping” notice under each WooCommerce product on the Shop Page. This can increase your click-through rate and hence your sales conversion rate. Here are a couple of PHP and CSS snippets so that you can implement this helpful edit.
+#show “Free Shipping” under each product @ WooCommerce Shop
+add_action( 'woocommerce_after_shop_loop_item', 'bbloomer_show_free_shipping_loop', 5 );
+ 
+function bbloomer_show_free_shipping_loop() {
+   echo '<p class="shop-badge">Free Shipping</p>';
+}
+//
+
+/*** Remove Additional Information Tab @ Single Product ***/
+#Hide Additional Information Tab @ WooCommerce Single Product Page
+add_filter( 'woocommerce_product_tabs', 'bbloomer_remove_product_tabs', 9999 );
+  
+function bbloomer_remove_product_tabs( $tabs ) {
+    unset( $tabs['additional_information'] ); 
+    return $tabs;
+}
+//
+
+/*** Show Number Of Products Sold @ Product Page ***/
+#WooCommerce database already stores the number of products sold for you.
+#Therefore, you may want to show such number on the product page, close to the Add To Cart button. As we’ve seen in my book Ecommerce and Beyond, showing the number of sales for each product can increase your sales conversion rate.
+#All you need is pasting the following code in your functions.php. Enjoy!
+#Show Total Number of Sales @ WooCommerce Single Product Page
+add_action( 'woocommerce_single_product_summary', 'bbloomer_product_sold_count', 11 );
+  
+function bbloomer_product_sold_count() {
+   global $product;
+   $units_sold = $product->get_total_sales();
+   if ( $units_sold ) echo '<p>' . sprintf( __( 'Units Sold: %s', 'woocommerce' ), $units_sold ) . '</p>';
+}
+//
+
 
 
 ?>
