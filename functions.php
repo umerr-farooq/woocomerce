@@ -281,6 +281,310 @@ function bbloomer_sale_end_date( $html, $post, $product ) {
 }
 //
 
+/*** Display Additional Content @ WooCommerce Single Product Additional Information Tab ***/
+add_action( 'woocommerce_product_additional_information', 'bbloomer_add_content_additional_information_tab', 11 );
+ 
+function bbloomer_add_content_additional_information_tab( $product ) {
+   echo '<p>Test</p>';
+}
+//
+
+/*** Rename “Related products” Title @ WooCommerce Single Product Page ***/
+add_filter( 'woocommerce_product_related_products_heading', 'bbloomer_rename_related_products' );
+ 
+function bbloomer_rename_related_products() {
+   return "Customers also viewed";
+}
+//
+
+/*** Capitalize Product Titles @ Shop & Single Product Pages ***/
+add_filter( 'the_title', 'bbloomer_capitalize_single_prod_title', 9999, 2 );
+ 
+function bbloomer_capitalize_single_prod_title( $post_title, $post_id ) {
+   if ( ! is_admin() && 'product' === get_post_type( $post_id ) ) {
+      $post_title = ucwords( strtolower( $post_title ) );
+   }
+   return $post_title;
+}
+//
+
+/*** Additional Product Description @ WooCommerce Single Product Page ***/
+#There are times when the “long description” and the “short description” are not enough on the WooCommerce Single Product page. What if you need to add another HTML content section – say – at the very bottom of the page (and maybe, because of the longer page, add another add to cart button there as well)?
+#In this simple snippet, we will add another “WYSIWYG” text editor in the Edit Product page, and display the output at the bottom of the single product page. Enjoy!
+add_action( 'add_meta_boxes', 'bbloomer_new_meta_box_single_prod' );
+ 
+function bbloomer_new_meta_box_single_prod() {
+   add_meta_box(
+      'custom_product_meta_box',
+      'Product third description',
+      'bbloomer_add_custom_content_meta_box',
+      'product',
+      'normal',
+      'default'
+   );
+}
+ 
+function bbloomer_add_custom_content_meta_box( $post ){
+   $third_desc = get_post_meta( $post->ID, '_third_desc', true ) ? get_post_meta( $post->ID, '_third_desc', true ) : '';   
+   wp_editor( $third_desc, '_third_desc' );
+}
+ 
+add_action( 'save_post_product', 'bbloomer_save_custom_content_meta_box', 10, 1 );
+ 
+function bbloomer_save_custom_content_meta_box( $post_id ) {
+   if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) return;
+   if ( ! isset( $_POST['_third_desc'] ) ) return;
+   update_post_meta( $post_id, '_third_desc', $_POST['_third_desc'] );
+}
+ 
+add_action( 'woocommerce_after_single_product_summary' , 'bbloomer_third_desc_bottom_single_product', 99 );
+   
+function bbloomer_third_desc_bottom_single_product() {
+   global $product;
+   $third_desc = get_post_meta( $product->get_id(), '_third_desc', true ) ? get_post_meta( $product->get_id(), '_third_desc', true ) : '';
+   if ( ! $third_desc ) return;
+   echo '<div>';
+   echo $third_desc;
+   echo '</div>';
+}
+//
+
+/*** Count External Product “Buy Product” Button Clicks & Display Counter @ Product Admin **/
+#Lots to learn today:
+#First, we remove the default external product add to cart button, and code ours instead
+#Some JS triggers the ‘increment_counter’ Ajax function on button click
+#The ‘increment_counter’ Ajax function counts and stores the number of clicks
+#The ‘manage_edit-product_columns’ and ‘manage_product_posts_custom_column’ display a new column in the Products admin page, and place the counter value in it
+add_action( 'woocommerce_external_add_to_cart', 'bblomer_new_external_add_to_cart', 1 );
+ 
+function bblomer_new_external_add_to_cart() {
+   remove_action( 'woocommerce_external_add_to_cart', 'woocommerce_external_add_to_cart', 30 );
+   add_action( 'woocommerce_external_add_to_cart', 'bbloomer_external_add_to_cart', 30 );
+}
+ 
+function bbloomer_external_add_to_cart() {
+   global $product;
+   if ( ! $product->add_to_cart_url() ) return;
+   echo '<p><a href="' . $product->add_to_cart_url() . '" class="single_add_to_cart_button button alt countable" data-pid="' . $product->get_id() . '">' . $product->single_add_to_cart_text() . '</a></p>';
+   wc_enqueue_js( "
+      $('a.countable').click(function(e){
+         e.preventDefault();
+         $.post( '" . '/wp-admin/admin-ajax.php' . "', { action: 'increment_counter', pid: $(this).data('pid') } );
+         window.open($(this).attr('href'));
+      });
+   " );
+}
+ 
+add_action( 'wp_ajax_increment_counter', 'bbloomer_increment_counter' );
+add_action( 'wp_ajax_nopriv_increment_counter', 'bbloomer_increment_counter' );
+ 
+function bbloomer_increment_counter() {
+   $pid = $_POST['pid'];
+   $clicks = get_post_meta( $pid, '_click_counter', true ) ? (int) get_post_meta( $pid, '_click_counter', true ) + 1 : 1;
+   update_post_meta( $pid, '_click_counter', $clicks );
+   wp_die();
+}
+ 
+add_filter( 'manage_edit-product_columns', 'bbloomer_admin_products_views_column', 9999 );
+ 
+function bbloomer_admin_products_views_column( $columns ){
+   $columns['clicks'] = 'Clicks';
+   return $columns;
+}
+ 
+add_action( 'manage_product_posts_custom_column', 'bbloomer_admin_products_views_column_content', 9999, 2 );
+ 
+function bbloomer_admin_products_views_column_content( $column, $product_id ){
+   if ( $column == 'clicks' ) {
+      echo get_post_meta( $product_id, '_click_counter', true );
+    }
+}
+//
+
+/*** Hide Specific “Additional Information” Tab Attribute @ Single Product ***/
+add_filter( 'woocommerce_display_product_attributes', 'bbloomer_exclude_attribute_from_attribute_table', 9999, 2 );
+ 
+function bbloomer_exclude_attribute_from_attribute_table( $product_attributes, $product ) {
+   if ( isset( $product_attributes[ 'attribute_pa_color' ] ) ) unset( $product_attributes[ 'attribute_pa_color' ] );
+   return $product_attributes;
+}
+//
+
+/*** Automatically Add Tag To Purchased Products ***/
+#Auto-tag Products Upon Purchase @ WooCommerce Thank You Page
+#This functionality can be helpful to those who need to differentiate purchased products from non-purchased ones. Think about a way to automatically discount non-tagged products, in order to entice more sales; or a function that only shows purchased products via a custom shortcode.
+#No matter the application, “tagging” products upon purchase is super easy. Of course, make sure to create a custom product tag first, and get its ID, so that you can use this in the code below. Enjoy!
+add_action( 'woocommerce_thankyou', 'bbloomer_auto_tag_product' );
+ 
+function bbloomer_auto_tag_product( $order_id ) {
+   $order = wc_get_order( $order_id );
+   $auto_tag_id = array( 12345 ); // YOUR TAG ID HERE
+   foreach ( $order->get_items() as $item_id => $item ) {
+      $product = $item->get_product();
+      $tags = $product->get_tag_ids();
+      if ( ! array_intersect( $tags, $auto_tag_id ) ) {
+         $product->set_tag_ids( array_merge( $tags, $auto_tag_id ) );
+         $product->save();
+      }
+   }
+}
+//
+
+/*** Allow Customers To Define the Product Price ***/
+#Pick Your Product Price @ WooCommerce Single Product Page
+#This is a great customization for those WooCommerce store owners who are willing to accept donations, custom amounts, or need anyway that the customer enters a custom price on the product page for paying an invoice or a bill.
+#This is as simple as creating a simple product with $0 price, and after that using the snippet below to display an input field on the single product page, where customers can enter their custom amount. Enjoy!
+#Note: you first need to create a simple product called anything you like e.g. “Donation” or “Pay Your Bill”, give it a $0.00 price, and get its product ID so that this can be used in the code below (ID 241982 in my case).
+add_action( 'woocommerce_before_add_to_cart_button', 'bbloomer_product_price_input', 9 );
+  
+function bbloomer_product_price_input() {
+   global $product;
+   if ( 241982 !== $product->get_id() ) return;
+   woocommerce_form_field( 'set_price', array(
+      'type' => 'text',
+      'required' => true,
+      'label' => 'Set price ' . get_woocommerce_currency_symbol(),
+   ));
+}
+  
+add_filter( 'woocommerce_add_to_cart_validation', 'bbloomer_product_add_on_validation', 9999, 3 );
+  
+function bbloomer_product_add_on_validation( $passed, $product_id, $qty ) {
+   if ( isset( $_POST['set_price'] ) && sanitize_text_field( $_POST['set_price'] ) == '' ) {
+      wc_add_notice( 'Set price is a required field', 'error' );
+      $passed = false;
+   }
+   return $passed;
+}
+  
+add_filter( 'woocommerce_add_cart_item_data', 'bbloomer_product_add_on_cart_item_data', 9999, 2 );
+  
+function bbloomer_product_add_on_cart_item_data( $cart_item, $product_id ) {
+   if ( 241982 !== $product_id ) return $cart_item;    
+   $cart_item['set_price'] = sanitize_text_field( $_POST['set_price'] );
+   return $cart_item;
+}
+ 
+add_action( 'woocommerce_before_calculate_totals', 'bbloomer_alter_price_cart', 9999 );
+  
+function bbloomer_alter_price_cart( $cart ) {
+   if ( is_admin() && ! defined( 'DOING_AJAX' ) ) return;
+   if ( did_action( 'woocommerce_before_calculate_totals' ) >= 2 ) return;
+   foreach ( $cart->get_cart() as $cart_item_key => $cart_item ) {
+      $product = $cart_item['data'];
+      if ( 241982 !== $product->get_id() ) continue;
+      $cart_item['data']->set_price( $cart_item['set_price'] );
+   } 
+}
+//
+
+/*** Additional “Store Address” @ General Settings ***/
+#Second Store Address @ WooCommerce > Settings > General
+#So, we all know that the “Store Address” fields under WooCommerce > Settings > General are used by other WooCommerce functions such as the initial setup wizard, currency switchers, language plugins as well as taxes and shipping calculations. Also, it may display on PDF invoices, WooCommerce emails and static pages.
+#This is all good and easy, but as usual businesses are not made equal. It could be that you need to show an additional address; for example, the “Warehouse Address”.
+#In this tutorial, we will add a new “Warehouse Address” section and address fields under the “Store Address” settings, and also see how we can easily retrieve this custom address so that you can display it anywhere. Enjoy!
+add_filter( 'woocommerce_general_settings', 'bbloomer_additional_store_addresses_admin', 9999 );
+ 
+function bbloomer_additional_store_addresses_admin( $settings ) {
+    
+   $new_settings = array(
+    
+      array(
+         'title' => 'Warehouse Address',
+         'type'  => 'title',
+         'id'    => 'wh_address',
+      ),
+ 
+      array(
+         'title'    => __( 'Address line 1', 'woocommerce' ),
+         'id'       => 'woocommerce_wh_address',
+         'type'     => 'text',
+      ),
+ 
+      array(
+         'title'    => __( 'Address line 2', 'woocommerce' ),
+         'id'       => 'woocommerce_wh_address_2',
+         'type'     => 'text',
+      ),
+ 
+      array(
+         'title'    => __( 'City', 'woocommerce' ),
+         'id'       => 'woocommerce_wh_city',
+         'type'     => 'text',
+      ),
+ 
+      array(
+         'title'    => __( 'Country / State', 'woocommerce' ),
+         'id'       => 'woocommerce_wh_country',
+         'type'     => 'single_select_country',
+      ),
+ 
+      array(
+         'title'    => __( 'Postcode / ZIP', 'woocommerce' ),
+         'id'       => 'woocommerce_wh_postcode',
+         'type'     => 'text',
+      ),
+ 
+      array(
+         'type' => 'sectionend',
+         'id'   => 'wh_address',
+      ),
+ 
+   );
+    
+   return array_merge( array_slice( $settings, 0, 7 ), $new_settings, array_slice( $settings, 7 ) );
+    
+}
+
+#You’re wondering how I came up with the code above? Well, I simply found out how the General Settings are output by WooCommerce, found the handy woocommerce_general_settings filter, and copied the whole “Store Address” section after changing the fields’ ID.
+#Finally, I used a combination of array_slice and array_merge to position the new section exactly after the Store Address one.
+#The great thing is that no code is needed to “save” these new fields, WooCommerce does it already for you. Which means you can retrieve the new address in this way:
+
+$warehouse_address = get_option( 'woocommerce_wh_address', '' );
+$warehouse_address_2 = get_option( 'woocommerce_wh_address_2', '' );
+$warehouse_city = get_option( 'woocommerce_wh_city', '' );
+$warehouse_country = get_option( 'woocommerce_wh_country', '' );
+$warehouse_zip = get_option( 'woocommerce_wh_postcode', '' );
+//
+
+/*** Redirect Specific Product Search To Custom URL ***/
+#Redirect Specific Search Term Result to a Custom URL @ WooCommerce Frontend
+add_action( 'template_redirect', 'bbloomer_redirect_search_results' );
+ 
+function bbloomer_redirect_search_results() {
+    if ( isset( $_GET['s'] ) && strcasecmp( $_GET['s'], 'tables' ) == 0 ) {
+        wp_redirect( 'https://example.com' );
+        exit();
+    }
+}
+//
+
+/*** Add to Cart Quantity Suffix ***/
+#Add to Cart Quantity Input Suffix @ WooCommerce Single Product Page
+add_action( 'woocommerce_after_quantity_input_field', 'bbloomer_echo_qty_front_add_cart' );
+  
+function bbloomer_echo_qty_front_add_cart() {
+   echo '<span class="qty-suff">liters</span>'; 
+}
+//
+
+/*** Display Product ACF Value @ Shop Page ***/
+#Show Product ACF @ WooCommerce Shop / Loop Pages
+#Note: please change the ACF field ID inside the get_field function to your own custom field ID. In my case I’ve used a custom field ID called “warranty“.
+add_action( 'woocommerce_before_shop_loop_item_title', 'bbloomer_acf_loop' );
+ 
+function bbloomer_acf_loop() {
+   global $product;
+   $warranty = get_field( 'warranty', $product->get_id() );
+   if ( ! $warranty ) return;
+   echo '<div><i>' . $warranty . '</i></div>';
+}
+//
+
+
+
+
+
 
 
 ?>
