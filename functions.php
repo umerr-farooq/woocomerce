@@ -782,4 +782,60 @@ function add_c_currency_symbol( $custom_currency_symbol, $custom_currency ) {
 }
 //
 
+/*** How to add a customer’s email and phone in the order email of WooCommerce ***/
+#Sometimes a store manager finds it a bit difficult to see the customers’ contact information from the orders of WooCommerce. It’s a bit lengthy process since he has to open order management, then order details to view the information. To ease the process of finding customer information, we can add the customer’s email address and phone directly to the order email. This order email is sent to the store manager when a customer places an order on the website.
+#By default, the WooCommerce order email does not contain customers’ details. The default order emails look like below:
+// WooCommerce admin order email - add customer information
+function w3_order_email_customer_details( $order ) {
+$phone = $order->get_billing_phone();
+$email = $order->get_billing_email();
+
+echo '<h2>'._e( 'Customer details', 'woocommerce' ).'</h2>
+ <ul>';
+  if($phone) {
+    echo '<li>
+	<strong>'.wp_kses_post( 'Email address').':</strong> 
+	<span class="text">'.wp_kses_post( $email ).'</span>
+      </li>';
+  }
+  if($phone) {
+    echo '<li>
+	<strong>'.wp_kses_post( 'Phone').':</strong> 
+	<span class="text">'.wp_kses_post( $phone ).'</span>
+      </li>';
+  }
+echo '</ul>';
+};
+
+// add action
+  add_action( 'woocommerce_email_customer_details', 'w3_order_email_customer_details', 10, 4 );
+
+#_e: used to display translated text if your website is multilingual.
+#wp_kses_post: sanitizes content for allowed HTML tags for post content.
+#Now, the store manager can easily get those details in the emails without logging into the wp-admin portal.
+
+
+/*** How to add a customer’s email and phone in the order email of WooCommerce ***/
+#Sometimes a store manager finds it a bit difficult to find customers’ email and phone from the orders of WooCommerce.  It’s a bit lengthy process since he has to open order management, then order details to view the information. To ease the process of finding customer information, we can add the customer’s email address and phone directly to the orders. This is actually the order table of the WordPress admin portal.
+#By default, the WooCommerce order table does not contain customers’ details. 
+#Here we wanted to show the customers’ email and phone in the orders table to the WordPress admins’ orders list. 
+#The store manager will see the customers’ email and phone directly with the order, under the Order column.
+
+// add customer email and phone to order in backend - order management
+function w3_customer_information_order_column( $column, $post_id ) {
+    if ( $column == 'order_number' ){
+	global $the_order;
+
+	if( $customer_phone = $the_order->get_billing_phone() ){
+	    echo '<p><a href="tel:'.$customer_phone.'"><span class="dashicons dashicons-phone"></span> '.$customer_phone.'</a></strong></p>';
+	}
+
+	if( $customer_email = $the_order->get_billing_email() ){
+	    echo '<p><a href="mailto:'.$customer_email.'"><span class="dashicons dashicons-email"></span> '.$customer_email.'</a></strong></p>';
+	}
+    }
+}
+add_action( 'manage_shop_order_posts_custom_column' , 'w3_customer_information_order_column', 50, 2 );
+//
+
 ?>
