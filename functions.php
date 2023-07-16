@@ -813,7 +813,7 @@ echo '</ul>';
 #_e: used to display translated text if your website is multilingual.
 #wp_kses_post: sanitizes content for allowed HTML tags for post content.
 #Now, the store manager can easily get those details in the emails without logging into the wp-admin portal.
-
+//
 
 /*** How to add a customer’s email and phone in the order email of WooCommerce ***/
 #Sometimes a store manager finds it a bit difficult to find customers’ email and phone from the orders of WooCommerce.  It’s a bit lengthy process since he has to open order management, then order details to view the information. To ease the process of finding customer information, we can add the customer’s email address and phone directly to the orders. This is actually the order table of the WordPress admin portal.
