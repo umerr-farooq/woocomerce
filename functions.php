@@ -760,6 +760,26 @@ function bbloomer_product_sold_count() {
 }
 //
 
+/*** How to add custom currency symbol in WooCommerce ***/
+#Sometimes you need your own currency symbol in your store. For example, if your currency is Singapore Dollar, the WooCommerce shows it as “$”. Your site visitors will be confused about whether it is a US Dollar or which currency. In this article, we will see how to add a custom currency symbol in WooCommerce for products, carts, and checkout using the filter hook method.
+#To make your currency symbol precise and more informative you can introduce your own symbol which helps users to understand the currency.
+#You need to add the following snippet in functions.php of your child theme:
+// add custom currency in WooCommerce settings
+add_filter( 'woocommerce_currencies', 'add_c_currency' );
+function add_c_currency( $c_currency ) {
+    $c_currency['SING_DOLLAR'] = __( 'Singaporian Dollar ', 'woocommerce' );
+    return $c_currency;
+}
 
+// define custom currency symbol
+add_filter('woocommerce_currency_symbol', 'add_c_currency_symbol', 10, 2);
+function add_c_currency_symbol( $custom_currency_symbol, $custom_currency ) {
+    switch( $custom_currency ) {
+	case 'SING_DOLLAR': $custom_currency_symbol = 'SG';        
+	break;
+    }
+    return $custom_currency_symbol;
+}
+//
 
 ?>
