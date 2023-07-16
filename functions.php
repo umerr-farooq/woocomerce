@@ -838,4 +838,23 @@ function w3_customer_information_order_column( $column, $post_id ) {
 add_action( 'manage_shop_order_posts_custom_column' , 'w3_customer_information_order_column', 50, 2 );
 //
 
+/*** How to add Image to WooCommerce order emails ***/
+#In this article, we will see how to add image to WooCommerce order emails, sent to the shop manager or site admin. Using WooCommerce, we can easily include product featured images in the order items within the order notification emails. This can be achieved using the WordPress filter hooks.
+#By default, the WooCommerce order email is very simple. When an order is placed, WooCommerce generates an email to the shop manager. The default representation of order detail is below:
+#You will notice that the products don’t have their featured image on them. Here we will be going to add image to WooCommerce order emails. To add images we need to add the following PHP snippet in functions.php of your child theme:
+
+// Add image to WooCommerce order emails
+function w3p_add_image_to_wc_emails( $args ) {
+    $args['show_image'] = true;
+    $args['image_size'] = array( 100, 50 );
+    return $args;
+}
+add_filter( 'woocommerce_email_order_items_args', 'w3p_add_image_to_wc_emails' );
+
+#Firstly, the show_image should be set to true and the other parameter is to give the image_size which will be cropped as per provided size, in the email. The image_size takes an array with 2 parameters; the first parameter is width while the second parameter is the height. In the above code, 100 is the width and 50 is the height.
+#Please note that these sizes are in pixels.
+#Once you allow images to the order email args, the images will become visible in the order emails.
+//
+
+
 ?>
