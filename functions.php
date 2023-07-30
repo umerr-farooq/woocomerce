@@ -706,6 +706,44 @@ function bbloomer_email_fatal_errors( $error ) {
 }
 //
 
+/*** Remove WooCommerce checkout fields ***/
+#Woocommerce has a lot of field in billing and shipping details. you can use a plugin to add or remove woocommerce checkout fields, it but some people like me try to not use the plugin as much as possible time.
+#So, let just put the code on your functions.php and comment or remove those line that you need to show on woocommerce checkout page. For example, I activate the email field by comment out unset($fields[‘billing’][‘billing_email’]);
+add_filter( 'woocommerce_checkout_fields' , 'custom_remove_woo_checkout_fields' );
+ 
+function custom_remove_woo_checkout_fields( $fields ) {
+
+    // remove billing fields
+    unset($fields['billing']['billing_first_name']);
+    unset($fields['billing']['billing_last_name']);
+    unset($fields['billing']['billing_company']);
+    unset($fields['billing']['billing_address_1']);
+    unset($fields['billing']['billing_address_2']);
+    unset($fields['billing']['billing_city']);
+    unset($fields['billing']['billing_postcode']);
+    unset($fields['billing']['billing_country']);
+    unset($fields['billing']['billing_state']);
+    unset($fields['billing']['billing_phone']);
+    //unset($fields['billing']['billing_email']);
+   
+    // remove shipping fields 
+    unset($fields['shipping']['shipping_first_name']);    
+    unset($fields['shipping']['shipping_last_name']);  
+    unset($fields['shipping']['shipping_company']);
+    unset($fields['shipping']['shipping_address_1']);
+    unset($fields['shipping']['shipping_address_2']);
+    unset($fields['shipping']['shipping_city']);
+    unset($fields['shipping']['shipping_postcode']);
+    unset($fields['shipping']['shipping_country']);
+    unset($fields['shipping']['shipping_state']);
+    
+    // remove order comment fields
+    unset($fields['order']['order_comments']);
+    
+    return $fields;
+}
+//
+
 /*** Disable Checkout Field Autocomplete ***/
 #By default, WooCommerce adds the “autocomplete” attribute to almost all checkout fields. For example, “billing_phone” has “autocomplete=tel”, “billing_country” has “autocomplete=country” and so on.
 #When logged out or if the logged in user has never done a purchase before, the WooCommerce Checkout page fields are possibly autofilled by the browser based on saved data / addresses.
