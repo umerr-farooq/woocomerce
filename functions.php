@@ -1,4 +1,43 @@
 <?php
+
+/*** Every time we are going to build an E-Commerce store with WooCommerce we all need to use shortcode ***/
+/*** Basic Store setup shortcode ***/
+/*** Page Shortcode ***/
+
+[woocommerce_cart] – shows the cart page
+[woocommerce_checkout] – shows the checkout page
+[woocommerce_my_account] – shows the user account page
+[woocommerce_order_tracking] – shows the order tracking form
+
+/*** With this shortcode we can show different type of product on any page as we want ***/	
+/*** Product Shortcode ***/
+
+[featured_products] 
+[sale_products]
+[best_selling_products]
+[recent_products]
+[product_attribute]
+[top_rated_products]
+[best_selling]
+[on_sale]
+
+//
+#Product shortcode attribute (If you want to display one row with 4 product)
+[products limit="4" columns="4" orderby="popularity" class="quick-sale" on_sale="true" ]
+
+#If you want to display my featured products, two per row, with a maximum of four items.
+[products limit="4" columns="2" visibility="featured" ]
+
+#Newest Products
+[products limit="4" columns="4" orderby="id" order="DESC" visibility="visible"]
+
+#Specific Categories (If you only want to display hoodies and shirts, but not accessories. I’ll use two rows of four)
+[products limit="8" columns="4" category="hoodies, tshirts" cat_operator="AND"]
+
+#Paginations (Display product with pagination. 4 product per page)
+[recent_products limit="12" columns="4" paginate="true"]
+//
+	
 /*** Remove product data tabs ***/
 add_filter( 'woocommerce_product_tabs', 'woo_remove_product_tabs', 98 );
 
