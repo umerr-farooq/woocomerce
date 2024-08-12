@@ -933,5 +933,14 @@ add_filter( 'woocommerce_email_order_items_args', 'w3p_add_image_to_wc_emails' )
 #Once you allow images to the order email args, the images will become visible in the order emails.
 //
 
+/**
+ * WooCommerce: Add custom fee to cart automatically
+ * Can be used to add a surcharge if so desired.
+ */
+function woo_add_cart_fee() {
+  global $woocommerce;
+  $woocommerce->cart->add_fee( __('Custom', 'woocommerce'), 5 );
+}
+add_action( 'woocommerce_cart_calculate_fees', 'woo_add_cart_fee' );
 
 ?>
