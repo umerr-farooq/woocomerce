@@ -942,5 +942,18 @@ function woo_add_cart_fee() {
   $woocommerce->cart->add_fee( __('Custom', 'woocommerce'), 5 );
 }
 add_action( 'woocommerce_cart_calculate_fees', 'woo_add_cart_fee' );
+//
+
+/*** Change currency symbol to AED ***/
+add_filter( 'woocommerce_currency_symbol', 'wc_change_uae_currency_symbol', 10, 2 );
+function wc_change_uae_currency_symbol( $currency_symbol, $currency ) {
+	switch ( $currency ) {
+		case 'AED':
+		$currency_symbol = 'AED';
+		break;
+	}
+	return $currency_symbol;
+}
+//
 
 ?>
